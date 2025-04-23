@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zestrik</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Video de fondo */
+        #video-fondo-completo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Capa semitransparente */
+        #capa-oscura {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(26, 0, 51, 0.7);
+            z-index: -1;
+        }
+
+        /* Contenido principal */
+        #contenido-principal {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
+
+        h1 {
+            color: #e0b0ff;
+            text-shadow: 0 0 10px rgba(156, 39, 176, 0.7);
+            margin: 10px 0;
+            font-size: clamp(20px, 5vw, 28px);
+            text-align: center;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        #canvas-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(156, 39, 176, 0.5);
+            background-color: rgba(26, 0, 51, 0.5);
+        }
+        
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #score-display {
+            text-align: center;
+            font-size: clamp(18px, 4vw, 22px);
+            margin: 10px 0;
+            color: #e0b0ff;
+            font-weight: 600;
+        }
+        
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 15px 0;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin: 4px 0;
+        }
+        
+        .control-btn {
+            width: 15vw;
+            height: 15vw;
+            max-width: 60px;
+            max-height: 60px;
+            margin: 3px;
+            background-color: rgba(156, 39, 176, 0.3);
+            border: 2px solid #e0b0ff;
+            border-radius: 15px;
+            color: white;
+            font-size: clamp(18px, 6vw, 24px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .control-btn:active {
+            background-color: rgba(156, 39, 176, 0.7);
+            transform: scale(0.95);
+        }
+        
+        button {
+            background-color: #9c27b0;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(14px, 4vw, 16px);
+            margin: 8px;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: auto;
+            max-width: 100%;
+        }
+        
+        #start-btn {
+            font-size: clamp(16px, 5vw, 20px);
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 0, 51, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 10px;
+        }
+        
+        #game-over h2 {
+            font-size: clamp(24px, 6vw, 36px);
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        /* Control de música */
+        #music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(156, 39, 176, 0.7);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        #music-control i {
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+    <!-- Iconos de Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Video de fondo -->
+    <video autoplay muted loop id="video-fondo-completo">
+        <source src="media/fondo.mp4" type="video/mp4">
+        Tu navegador no soporta video HTML5.
+    </video>
+    
+    <!-- Capa oscura -->
+    <div id="capa-oscura"></div>
+    
+    <!-- Control de música -->
+    <div id="music-control" title="Música ON/OFF">
+        <i class="fas fa-music"></i>
+    </div>
+    
+    <!-- Contenido del juego -->
+    <div id="contenido-principal">
+        <h1>Zestrik</h1>
+        
+        <div id="game-container">
+            <div id="score-display">Puntuación: <span id="score">0</span></div>
+            <div id="canvas-wrapper">
+                <canvas id="game-canvas"></canvas>
+                
+                <div id="game-over">
+                    <h2>¡Game Over!</h2>
+                    <p>Tu puntuación: <span id="final-score">0</span></p>
+                    <button id="restart-btn">Jugar de nuevo</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="start-btn">¡Empezar Juego!</button>
+
+        <div id="controls">
+            <div class="control-row">
+                <div class="control-btn" id="up-btn">↑</div>
+            </div>
+            <div class="control-row">
+                <div class="control-btn" id="left-btn">←</div>
+                <div class="control-btn" id="down-btn">↓</div>
+                <div class="control-btn" id="right-btn">→</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio -->
+    <audio id="eat-sound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
+    <audio id="game-over-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+    <!-- Música de fondo alegre (Creative Commons) -->
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script>
+        // Configuración del juego
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const videoFondo = document.getElementById('video-fondo-completo');
+        const scoreDisplay = document.getElementById('score');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const gameOverScreen = document.getElementById('game-over');
+        const restartBtn = document.getElementById('restart-btn');
+        const startBtn = document.getElementById('start-btn');
+        const eatSound = document.getElementById('eat-sound');
+        const gameOverSound = document.getElementById('game-over-sound');
+        const bgMusic = document.getElementById('bg-music');
+        const musicControl = document.getElementById('music-control');
+        
+        // Variables del juego
+        let snake = [];
+        let food = {};
+        let direction = 'right';
+        let nextDirection = 'right';
+        let gameLoop;
+        let score = 0;
+        let gridSize = 20;
+        let tileCount;
+        let tileSize;
+        let isGameRunning = false;
+        let isMusicOn = false;
+        
+        // Imágenes personalizadas (serpiente verde)
+        const snakeHeadImg = new Image();
+        snakeHeadImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzRjYWY1MCIgZD0iTTEyLDJBMTAsMTAgMCAwLDAgMiwxMkExMCwxMCAwIDAsMCAxMiwyMkExMCwxMCAwIDAsMCAyMiwxMkExMCwxMCAwIDAsMCAxMiwyWiIvPjwvc3ZnPg==';
+        
+        const snakeBodyImg = new Image();
+        snakeBodyImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzhlY2M2ZSIgZD0iTTEyLDJBMTAsMTAgMCAwLDAgMiwxMkExMCwxMCAwIDAsMCAxMiwyMkExMCwxMCAwIDAsMCAyMiwxMkExMCwxMCAwIDAsMCAxMiwyWiIvPjwvc3ZnPg==';
+        
+        const foodImg = new Image();
+        foodImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2EzMjg4ZSIgZD0iTTEyLDJBMTAsMTAgMCAwLDAgMiwxMkExMCwxMCAwIDAsMCAxMiwyMkExMCwxMCAwIDAsMCAyMiwxMkExMCwxMCAwIDAsMCAxMiwyWiIvPjwvc3ZnPg==';
+
+        // Inicializar el juego
+        function initGame() {
+            // Prevenir scroll con las flechas del teclado
+            window.addEventListener('keydown', function(e) {
+                if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.code) > -1) {
+                    e.preventDefault();
+                }
+            }, false);
+            
+            // Configurar controles de música
+            setupMusicControls();
+            
+            // Intentar reproducir el video de fondo
+            videoFondo.play().catch(e => {
+                console.log("Autoplay bloqueado:", e);
+            });
+            
+            // Ajustar tamaño del canvas
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Configurar controles
+            setupControls();
+            
+            // Mostrar pantalla de inicio
+            showStartScreen();
+        }
+        
+        function setupMusicControls() {
+            // Control de música
+            musicControl.addEventListener('click', toggleMusic);
+            
+            // Intentar iniciar música (algunos navegadores requieren interacción del usuario)
+            document.addEventListener('click', function firstInteraction() {
+                if(!isMusicOn) {
+                    toggleMusic();
+                }
+                document.removeEventListener('click', firstInteraction);
+            });
+        }
+        
+        function toggleMusic() {
+            isMusicOn = !isMusicOn;
+            
+            if(isMusicOn) {
+                bgMusic.play();
+                musicControl.innerHTML = '<i class="fas fa-volume-up"></i>';
+                musicControl.title = "Música OFF";
+            } else {
+                bgMusic.pause();
+                musicControl.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                musicControl.title = "Música ON";
+            }
+        }
+        
+        function setupControls() {
+            // Controles táctiles
+            document.getElementById('up-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                changeDirection('up');
+            });
+            document.getElementById('down-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                changeDirection('down');
+            });
+            document.getElementById('left-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                changeDirection('left');
+            });
+            document.getElementById('right-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                changeDirection('right');
+            });
+            
+            // Controles de teclado
+            document.addEventListener('keydown', handleKeyDown);
+            
+            // Botones
+            startBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('click', resetGame);
+        }
+        
+        function showStartScreen() {
+            ctx.fillStyle = 'rgba(26, 0, 51, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#e0b0ff';
+            ctx.font = '20px Poppins';
+            ctx.textAlign = 'center';
+            ctx.fillText('¡Presiona el botón para empezar!', canvas.width / 2, canvas.height / 2);
+        }
+        
+        function startGame() {
+            if (!isGameRunning) {
+                resetGame();
+                startBtn.style.display = 'none';
+            }
+        }
+        
+        function resizeCanvas() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            const size = wrapper.offsetWidth;
+            
+            canvas.width = size;
+            canvas.height = size;
+            
+            tileSize = Math.floor(size / gridSize);
+            tileCount = Math.floor(size / tileSize);
+            
+            if (isGameRunning) {
+                drawGame();
+            } else {
+                showStartScreen();
+            }
+        }
+        
+        function resetGame() {
+            clearInterval(gameLoop);
+            
+            snake = [];
+            direction = 'right';
+            nextDirection = 'right';
+            score = 0;
+            scoreDisplay.textContent = score;
+            isGameRunning = true;
+            startBtn.style.display = 'none';
+            
+            // Serpiente inicial
+            const startX = Math.floor(tileCount / 4);
+            for (let i = 3; i >= 0; i--) {
+                snake.push({ x: startX + i, y: Math.floor(tileCount / 2) });
+            }
+            
+            generateFood();
+            gameOverScreen.style.display = 'none';
+            gameLoop = setInterval(gameStep, 100);
+        }
+        
+        function gameStep() {
+            direction = nextDirection;
+            const head = { x: snake[0].x, y: snake[0].y };
+            
+            switch (direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+            
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || checkCollision(head.x, head.y, snake)) {
+                gameOver();
+                return;
+            }
+            
+            snake.unshift(head);
+            
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreDisplay.textContent = score;
+                playSound(eatSound);
+                generateFood();
+            } else {
+                snake.pop();
+            }
+            
+            drawGame();
+        }
+        
+        function drawGame() {
+            // Fondo semitransparente
+            ctx.fillStyle = 'rgba(26, 0, 51, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar serpiente (verde)
+            for (let i = 0; i < snake.length; i++) {
+                const img = i === 0 ? snakeHeadImg : snakeBodyImg;
+                ctx.drawImage(img, snake[i].x * tileSize, snake[i].y * tileSize, tileSize, tileSize);
+            }
+            
+            // Dibujar comida
+            ctx.drawImage(foodImg, food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+        }
+        
+        function generateFood() {
+            let foodX, foodY;
+            do {
+                foodX = Math.floor(Math.random() * tileCount);
+                foodY = Math.floor(Math.random() * tileCount);
+            } while (checkCollision(foodX, foodY, snake));
+            
+            food = { x: foodX, y: foodY };
+        }
+        
+        function checkCollision(x, y, array) {
+            return array.some(segment => segment.x === x && segment.y === y);
+        }
+        
+        function changeDirection(newDirection) {
+            if (
+                (direction === 'up' && newDirection !== 'down') ||
+                (direction === 'down' && newDirection !== 'up') ||
+                (direction === 'left' && newDirection !== 'right') ||
+                (direction === 'right' && newDirection !== 'left')
+            ) {
+                nextDirection = newDirection;
+            }
+        }
+        
+        function handleKeyDown(e) {
+            // Prevenir scroll de página
+            if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.key) > -1) {
+                e.preventDefault();
+            }
+            
+            switch (e.key) {
+                case 'ArrowUp': changeDirection('up'); break;
+                case 'ArrowDown': changeDirection('down'); break;
+                case 'ArrowLeft': changeDirection('left'); break;
+                case 'ArrowRight': changeDirection('right'); break;
+                case ' ':
+                    if (gameOverScreen.style.display === 'flex') {
+                        resetGame();
+                    } else if (!isGameRunning) {
+                        startGame();
+                    }
+                    break;
+                case 'm':
+                case 'M':
+                    toggleMusic();
+                    break;
+            }
+        }
+        
+        function gameOver() {
+            clearInterval(gameLoop);
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'flex';
+            isGameRunning = false;
+            startBtn.style.display = 'block';
+            playSound(gameOverSound);
+        }
+        
+        function playSound(sound) {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("Error al reproducir sonido:", e));
+        }
+        
+        // Iniciar el juego
+        window.onload = initGame;
+    </script>
+</body>
+</html>
