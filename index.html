@@ -217,6 +217,19 @@
             color: white;
             font-size: 24px;
         }
+
+        #start-btn {
+            font-size: clamp(16px, 5vw, 20px);
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            margin: 15px 0;
+            font-weight: 600;
+            display: block; /* Mostrar inicialmente */
+        }
+        
+        .hidden {
+            display: none !important;
+        }
     </style>
 <!-- Iconos de Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -423,6 +436,7 @@
             restartBtn.addEventListener('click', resetGame);
         }
         
+        // Al iniciar la página, mostrar solo el botón de inicio
         function showStartScreen() {
             ctx.fillStyle = 'rgba(26, 0, 51, 0.8)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -430,6 +444,9 @@
             ctx.font = '20px Poppins';
             ctx.textAlign = 'center';
             ctx.fillText('¡Presiona el botón para empezar!', canvas.width / 2, canvas.height / 2);
+            
+            // Asegurarse que el botón de inicio esté visible
+            startBtn.classList.remove('hidden');
         }
         
         function startGame() {
@@ -465,7 +482,6 @@
             score = 0;
             scoreDisplay.textContent = score;
             isGameRunning = true;
-            startBtn.style.display = 'none';
             
             // Serpiente inicial
             const startX = Math.floor(tileCount / 4);
@@ -578,9 +594,10 @@
             finalScoreDisplay.textContent = score;
             gameOverScreen.style.display = 'flex';
             isGameRunning = false;
-            startBtn.style.display = 'block';
             playSound(gameOverSound);
+            // No mostramos el start-btn aquí
         }
+
         
         function playSound(sound) {
             sound.currentTime = 0;
